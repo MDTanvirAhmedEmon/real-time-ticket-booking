@@ -85,11 +85,11 @@ export default function BusResults() {
                   <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-4">
                       <div className="border-b border-r-0 p-4 md:border-b-0 md:border-r">
-                        <div className="flex items-center space-x-3">
-                          <Image src={busImage} alt={bus.company} className=" w-10 rounded object-cover" />
-                          <div>
+                        <div className="flex flex-col justify-center items-center space-x-3">
+                          <Image src={busImage} alt={bus.company} className=" w-14 rounded object-cover" />
+                          <div className=" text-center mt-3">
                             <h3 className="font-semibold">{bus.company}</h3>
-                            <div className="flex items-center text-sm text-yellow-500">
+                            <div className="flex items-center justify-center text-sm text-yellow-500">
                               <Star className="mr-1 h-4 w-4 fill-yellow-500 text-yellow-500" />
                               <span>{bus.rating}</span>
                             </div>

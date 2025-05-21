@@ -60,6 +60,7 @@ export default function Home() {
             </form>
           </CardContent>
         </Card>
+        
         <BusResults />
 
         <section className="mb-12">
