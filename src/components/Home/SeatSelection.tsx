@@ -129,7 +129,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                             <button
                               key={seatIndex}
                               className={cn(
-                                "flex h-10 items-center justify-center rounded border text-sm font-medium",
+                                "flex h-10 items-center justify-center rounded border text-sm font-medium cursor-pointer",
                                 hasAisleAfter,
                                 isUnavailable
                                   ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"

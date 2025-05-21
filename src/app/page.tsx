@@ -1,13 +1,65 @@
+"use client"
 import { Clock, MapPin, Search } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import BusResults from "../components/Home/BusResults"
-
+import { CalendarIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { useState } from "react"
 
 export default function Home() {
+  const [date, setDate] = useState<Date>()
   return (
     <div className="min-h-screen bg-gray-50">
 
-      <main className="container mx-auto px-4 py-8">
+      <main className=" max-w-4xl mx-auto px-4 py-8">
+        <Card className="shadow-lg mb-10">
+          <CardContent className="p-6">
+            <form>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <Label htmlFor="from">From</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input id="from" placeholder="Departure City" className="pl-9" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="to">To</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input id="to" placeholder="Arrival City" className="pl-9" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar className=" bg-white" mode="single" selected={date} onSelect={setDate} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex items-end">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Search Buses</Button>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
         <BusResults />
 
         <section className="mb-12">

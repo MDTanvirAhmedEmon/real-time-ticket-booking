@@ -1,13 +1,13 @@
 "use client"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, Clock, Coffee, Wifi, Tv, BatteryCharging, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-
+import busImage from '../../../public/bus.png'
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 const busData = [
   {
@@ -50,10 +50,13 @@ const busData = [
 
 export default function BusResults() {
   const [selectedBus, setSelectedBus] = useState<number | null>(null)
+  console.log(selectedBus);
+  const router = useRouter();
   const [showSeats, setShowSeats] = useState(false)
 
   const handleSelectBus = (busId: number) => {
     setSelectedBus(busId)
+    router.push(`/booking?selectedBus=${busId}`);
     setShowSeats(true)
   }
 
@@ -69,10 +72,10 @@ export default function BusResults() {
             <h2 className="mb-6 text-2xl font-bold text-gray-800">Available Buses</h2>
             <Tabs defaultValue="all" className="mb-6">
               <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="morning">Morning</TabsTrigger>
-                <TabsTrigger value="afternoon">Afternoon</TabsTrigger>
-                <TabsTrigger value="evening">Evening</TabsTrigger>
+                <TabsTrigger className=" cursor-pointer" value="all">All</TabsTrigger>
+                <TabsTrigger className=" cursor-pointer" value="morning">Morning</TabsTrigger>
+                <TabsTrigger className=" cursor-pointer" value="afternoon">Afternoon</TabsTrigger>
+                <TabsTrigger className=" cursor-pointer" value="evening">Evening</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -83,7 +86,7 @@ export default function BusResults() {
                     <div className="grid grid-cols-1 md:grid-cols-4">
                       <div className="border-b border-r-0 p-4 md:border-b-0 md:border-r">
                         <div className="flex items-center space-x-3">
-                          <img src={bus.logo || "/placeholder.svg"} alt={bus.company} className="h-10 w-10 rounded" />
+                          <Image src={busImage} alt={bus.company} className=" w-10 rounded object-cover" />
                           <div>
                             <h3 className="font-semibold">{bus.company}</h3>
                             <div className="flex items-center text-sm text-yellow-500">
@@ -140,14 +143,12 @@ export default function BusResults() {
 
                       <div className="p-4">
                         <p className="mb-2 text-center text-2xl font-bold text-blue-600">${bus.price}</p>
-                        <Link href={`/booking?selectedBus=${selectedBus}`}>
-                          <Button
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                            onClick={() => handleSelectBus(bus.id)}
-                          >
-                            Select Seats
-                          </Button>
-                        </Link>
+                        <Button
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                          onClick={() => handleSelectBus(bus.id)}
+                        >
+                          Select Seats
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
