@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, Clock, Coffee, Wifi, Tv, BatteryCharging, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import SeatSelection from "./SeatSelection"
+import Link from "next/link"
 
 
 const busData = [
@@ -140,12 +140,14 @@ export default function BusResults() {
 
                       <div className="p-4">
                         <p className="mb-2 text-center text-2xl font-bold text-blue-600">${bus.price}</p>
-                        <Button
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                          onClick={() => handleSelectBus(bus.id)}
-                        >
-                          Select Seats
-                        </Button>
+                        <Link href={`/booking?selectedBus=${selectedBus}`}>
+                          <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                            onClick={() => handleSelectBus(bus.id)}
+                          >
+                            Select Seats
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </CardContent>
@@ -158,7 +160,7 @@ export default function BusResults() {
             <Button variant="outline" onClick={handleBackToResults} className="mb-4">
               Back to results
             </Button>
-            <SeatSelection busId={selectedBus || 1} bus={busData.find((b) => b.id === selectedBus) || busData[0]} />
+
           </div>
         )}
       </div>

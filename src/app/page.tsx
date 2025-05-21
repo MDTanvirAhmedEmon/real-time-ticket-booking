@@ -1,38 +1,13 @@
-"use client"
-import { CalendarIcon, Clock, MapPin, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Clock, MapPin, Search } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { useState } from "react"
-import BusResults from "./components/BusResults"
-import Header from "@/components/Shared/Header"
-import Footer from "@/components/Shared/Footer"
+import BusResults from "../components/Home/BusResults"
 
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header></Header>
 
       <main className="container mx-auto px-4 py-8">
-        <section className="mb-12">
-          <div className="mx-auto max-w-4xl">
-            <h1 className="mb-6 text-center text-3xl font-bold text-gray-800 md:text-4xl">
-              Book Your Bus Tickets Online
-            </h1>
-            <p className="mb-8 text-center text-gray-600">
-              Search, compare, and book bus tickets for your next journey
-            </p>
-
-            <SearchForm />
-          </div>
-        </section>
-
         <BusResults />
 
         <section className="mb-12">
@@ -76,56 +51,8 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <Footer></Footer>
     </div>
   )
 }
 
-function SearchForm() {
-  const [date, setDate] = useState<Date>()
 
-  return (
-    <Card className="shadow-lg">
-      <CardContent className="p-6">
-        <form>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="from">From</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input id="from" placeholder="Departure City" className="pl-9" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to">To</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input id="to" placeholder="Arrival City" className="pl-9" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="flex items-end">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">Search Buses</Button>
-            </div>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  )
-}

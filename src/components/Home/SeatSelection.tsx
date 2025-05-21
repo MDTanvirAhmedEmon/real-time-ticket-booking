@@ -154,7 +154,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                 <Button
                   onClick={handleContinue}
                   disabled={selectedSeats.length === 0}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                 >
                   Continue
                 </Button>
@@ -218,11 +218,11 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                   <Button
                     variant="outline"
                     onClick={() => setStep(1)}
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
                   >
                     Back
                   </Button>
-                  <Button onClick={handleConfirmBooking} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleConfirmBooking} className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
                     Confirm Booking
                   </Button>
                 </div>
