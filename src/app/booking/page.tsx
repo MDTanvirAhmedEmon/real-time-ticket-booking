@@ -47,7 +47,7 @@ const Booking = () => {
     ]
 
     return (
-        <section className="mb-12 py-8">
+        <section className="mb-12 py-8 px-4 md:px-0">
             <div className="mx-auto max-w-4xl">
                 <h1 className="mb-6 text-center text-3xl font-bold text-gray-800 md:text-4xl">
                     Book Your Bus Tickets Online
