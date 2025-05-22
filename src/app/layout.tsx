@@ -27,12 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        data-new-gr-c-s-check-loaded="14.1235.0"
+        data-gr-ext-installed=""
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Header></Header>
         {children}
         <Footer></Footer>
       </body>
-    </html>
+    </html >
   );
 }
