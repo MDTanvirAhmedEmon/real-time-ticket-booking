@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { ArrowRight, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { io, Socket } from 'socket.io-client';
 
 interface SeatSelectionProps {
   busId: number
@@ -25,6 +27,8 @@ interface SeatSelectionProps {
 export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
   const [step, setStep] = useState(1)
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [seats, setSeats] = useState<any>();
 
   const totalRows = 10
   const seatsPerRow = 4
@@ -66,9 +70,38 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   }
 
   const handleConfirmBooking = () => {
-    // In a real app, this would submit the booking
     alert("Booking confirmed! Thank you for your purchase.")
   }
+
+  // socket connection and event handling
+  useEffect(() => {
+    const newSocket = io(`http://localhost:5000/booking`);
+    setSocket(newSocket);
+    newSocket.on('connect', () => {
+      console.log('Connected with socket id:', newSocket.id);
+      newSocket.emit('joinBusRoom', JSON.stringify({ bus: "642c8f4a9b1e8b0012345678" }));
+    });
+
+    newSocket.on('busSeatsUpdated', (updatedSeats) => {
+      console.log('Received updated seats:', updatedSeats);
+      // setSeats(updatedSeats);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+
+  
+  // const handleCreateBooking = () => {
+  //   if (!socket) return;
+  //   // Send booking data to server
+  //   socket.emit('createBooking', JSON.stringify(bookingData));
+  // };
+
+
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -103,7 +136,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                     </div>
                     <div className="flex items-center">
                       <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-red-200"></div>
-                      <span className="text-sm">Someone locked</span>
+                      <span className="text-sm">Locked Someone</span>
                     </div>
                   </div>
 
