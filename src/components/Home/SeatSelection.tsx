@@ -45,10 +45,12 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const allSeats = generateSeats()
 
   // Some random unavailable seats
-  const unavailableSeats = ["1A", "1B", "3C", "3D", "5B", "6A", "7C", "8D", "9B", "10A"]
+  const unavailableSeats = ["1B", "3C", "3D", "5B", "8D", "9B", "10A"]
+  const slectedSeatsByOthers = ["1A", "6A", "7C",]
 
   const toggleSeatSelection = (seatId: string) => {
     if (unavailableSeats.includes(seatId)) return
+    if (slectedSeatsByOthers.includes(seatId)) return
 
     setSelectedSeats((prev) => {
       if (prev.includes(seatId)) {
@@ -93,20 +95,30 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
               </div>
 
               <div className="mb-6">
-                <div className="mb-4 flex justify-center space-x-4">
-                  <div className="flex items-center">
-                    <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-white"></div>
-                    <span className="text-sm">Available</span>
+                <div className="mb-4 flex flex-col sm:flex-row items-center justify-center space-x-4">
+                  <div className=" flex space-x-4">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-white"></div>
+                      <span className="text-sm">Available</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-red-200"></div>
+                      <span className="text-sm">Someone locked</span>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-gray-300"></div>
-                    <span className="text-sm">Unavailable</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="mr-2 h-4 w-4 rounded border border-blue-500 bg-blue-500"></div>
-                    <span className="text-sm">Selected</span>
+
+                  <div className=" flex space-x-4">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-gray-300"></div>
+                      <span className="text-sm">Unavailable</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="mr-2 h-4 w-4 rounded border border-blue-500 bg-blue-500"></div>
+                      <span className="text-sm">Selected</span>
+                    </div>
                   </div>
                 </div>
+
 
                 <div className="flex justify-center">
                   <div className="w-64 rounded-t-xl bg-gray-200 p-2 text-center font-semibold">Driver</div>
@@ -123,6 +135,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                           const seatLetter = String.fromCharCode(65 + seatIndex) // A, B, C, D
                           const seatId = `${rowIndex + 1}${seatLetter}`
                           const isUnavailable = unavailableSeats.includes(seatId)
+                          const isSelectedByOthers = slectedSeatsByOthers.includes(seatId)
                           const isSelected = selectedSeats.includes(seatId)
 
                           return (
@@ -135,7 +148,10 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                                   ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
                                   : isSelected
                                     ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
-                                    : "border-gray-300 bg-white hover:border-blue-500",
+                                    :
+                                    isSelectedByOthers ?
+                                      "border-red-200 bg-red-200 text-white hover:bg-red-200 cursor-not-allowed"
+                                      : "border-gray-300 bg-white hover:border-blue-500",
                               )}
                               onClick={() => toggleSeatSelection(seatId)}
                               disabled={isUnavailable}
