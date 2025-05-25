@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowRight, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { io, Socket } from 'socket.io-client';
+import { useGetAllUnavailableSeatsQuery } from "@/redux/baseApi"
 
 interface SeatSelectionProps {
   busId: number
@@ -26,9 +27,15 @@ interface SeatSelectionProps {
 
 export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
+  console.log('my selected seats:', selectedSeats);
   const [step, setStep] = useState(1)
   const [socket, setSocket] = useState<Socket | null>(null);
   const [seats, setSeats] = useState<any>();
+
+  const { data } = useGetAllUnavailableSeatsQuery("642c8f4a9b1e8b0012345678", {
+    refetchOnMountOrArgChange: true,
+  })
+  console.log(data?.data?.unavailable);
 
   const totalRows = 10
   const seatsPerRow = 4
@@ -49,21 +56,20 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const allSeats = generateSeats()
 
   // Some random unavailable seats
-  const unavailableSeats = ["1B", "3C", "3D", "5B", "8D", "9B", "10A"]
-  const slectedSeatsByOthers = ["1A", "6A", "7C",]
+  // const unavailableSeats = ["1B", "3C", "3D", "5B", "8D", "9B", "10A"]
+  const [unavailableSeats, setUnavailableSeats] = useState<string[]>([]);
+  const [slectedSeatsByOthers, setSelectedSeatsByOthers] = useState<string[]>([]);
 
-  const toggleSeatSelection = (seatId: string) => {
-    if (unavailableSeats.includes(seatId)) return
-    if (slectedSeatsByOthers.includes(seatId)) return
+  // Update states when `data` changes (e.g. after API call)
+  useEffect(() => {
+    if (data?.data) {
+      setUnavailableSeats(data.data.unavailable || []);
+      setSelectedSeatsByOthers(data.data.locked || []);
+    }
+  }, [data]);
 
-    setSelectedSeats((prev) => {
-      if (prev.includes(seatId)) {
-        return prev.filter((s) => s !== seatId)
-      } else {
-        return [...prev, seatId]
-      }
-    })
-  }
+  // const unavailableSeats = data?.data?.unavailable ? data?.data?.unavailable : []
+  // const slectedSeatsByOthers = data?.data?.locked ? data?.data?.locked : []
 
   const handleContinue = () => {
     setStep(2)
@@ -83,8 +89,12 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
     });
 
     newSocket.on('busSeatsUpdated', (updatedSeats) => {
-      console.log('Received updated seats:', updatedSeats);
-      // setSeats(updatedSeats);
+      console.log('Received updated seats:', updatedSeats?.unavailable);
+      console.log('Received updated seatsssssssss locked:', updatedSeats?.locked);
+
+      setUnavailableSeats(updatedSeats?.unavailable || []);
+      setSelectedSeatsByOthers(updatedSeats?.locked || []);
+      setSeats(updatedSeats);
     });
 
     // Cleanup on unmount
@@ -94,13 +104,34 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   }, []);
 
 
-  
+
   // const handleCreateBooking = () => {
   //   if (!socket) return;
   //   // Send booking data to server
   //   socket.emit('createBooking', JSON.stringify(bookingData));
   // };
 
+
+  const toggleSeatSelection = (seatId: string) => {
+    if (unavailableSeats.includes(seatId)) return
+    // if (slectedSeatsByOthers.includes(seatId)) return
+    const bookingData = {
+      bus: "642c8f4a9b1e8b0012345678",
+      user: "642c8f4a9b1e8b0098765432",
+      seat: seatId
+    }
+
+    if (!socket) return;
+    socket.emit('createBooking', JSON.stringify(bookingData));
+
+    setSelectedSeats((prev) => {
+      if (prev.includes(seatId)) {
+        return prev.filter((s) => s !== seatId)
+      } else {
+        return [...prev, seatId]
+      }
+    })
+  }
 
 
   return (
