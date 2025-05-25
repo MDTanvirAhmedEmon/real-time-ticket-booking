@@ -73,8 +73,8 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
       const seatTime = new Date(seat.date)
       const timeDifference = currentTime.getTime() - seatTime.getTime()
 
-      // Example: seats expire after 5 minutes (300000 ms) 1 minute = 60000 ms
-      if (timeDifference < 480000) {
+      // Example: seats expire after 11 minutes (660000 ms) 1 minute = 60000 ms
+      if (timeDifference < 660000) {
         activeSeats.push(seat.seat)
       } else {
         dispatch(removeSeats(seat))
@@ -294,7 +294,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
               <div className="rounded-md bg-gray-50 py-2 text-sm">
                 <p className="flex items-start">
                   <Check className="mr-2 h-4 w-4 text-green-500" />
-                  Remember your selected seats will be locked for 7 minutes. If you do not complete the payment, they will be released for others.
+                  Remember your selected seats will be locked for 10 minutes. If you do not complete the payment, they will be released for others.
                 </p>
               </div>
             </div>
