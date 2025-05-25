@@ -7,9 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 
+interface CheckOutProps {
+    selectedSeats: string[];
+    setStep: any;
+}
 
-const CheckOut = () => {
-    const selectedSeats = ["A1", "A2", "B1"]; // Example selected seats, replace with actual state or props
+const CheckOut = ({ selectedSeats, setStep }: CheckOutProps) => {
+
     return (
         <div>
             <Card>
@@ -68,6 +72,7 @@ const CheckOut = () => {
                             <Button
                                 variant="outline"
                                 // onClick={() => setStep(1)}
+                                onClick={() => setStep(false)}
                                 className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
                             >
                                 Back
