@@ -5,14 +5,13 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { ArrowRight, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { io, Socket } from 'socket.io-client';
 import { useGetAllUnavailableSeatsQuery } from "@/redux/baseApi"
+import { useDispatch, useSelector } from "react-redux"
+import { removeSeats, selectedSeatsRedux } from "@/redux/selectedSeats/selectedSeatsSlice"
 
 interface SeatSelectionProps {
   busId: number
@@ -26,22 +25,24 @@ interface SeatSelectionProps {
 }
 
 export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
+  const seatsFromRedux = useSelector((state: any) => state.selectedSeats)
+  const dispatch = useDispatch()
+
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
-  console.log('my selected seats:', selectedSeats);
-  const [step, setStep] = useState(1)
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [seats, setSeats] = useState<any>();
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [seats, setSeats] = useState<any>()
+  const [unavailableSeats, setUnavailableSeats] = useState<string[]>([])
+  const [selectedSeatsByOthers, setSelectedSeatsByOthers] = useState<string[]>([])
 
   const { data } = useGetAllUnavailableSeatsQuery("642c8f4a9b1e8b0012345678", {
     refetchOnMountOrArgChange: true,
   })
-  console.log(data?.data?.unavailable);
 
+  // Generate seat IDs (1A, 1B, 1C, 1D, 2A, etc.)
   const totalRows = 10
   const seatsPerRow = 4
-  const aisleAfter = 2 // Aisle after the 2nd seat
+  const aisleAfter = 2
 
-  // Generate seats (A1, A2, B1, B2, etc.)
   const generateSeats = () => {
     const seats = []
     for (let row = 1; row <= totalRows; row++) {
@@ -55,261 +56,178 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
 
   const allSeats = generateSeats()
 
-  // Some random unavailable seats
-  // const unavailableSeats = ["1B", "3C", "3D", "5B", "8D", "9B", "10A"]
-  const [unavailableSeats, setUnavailableSeats] = useState<string[]>([]);
-  const [slectedSeatsByOthers, setSelectedSeatsByOthers] = useState<string[]>([]);
-
-  // Update states when `data` changes (e.g. after API call)
+  // Update unavailable and locked seats from API data
   useEffect(() => {
     if (data?.data) {
-      setUnavailableSeats(data.data.unavailable || []);
-      setSelectedSeatsByOthers(data.data.locked || []);
+      setUnavailableSeats(data.data.unavailable || [])
+      setSelectedSeatsByOthers(data.data.locked || [])
     }
-  }, [data]);
+  }, [data])
 
-  // const unavailableSeats = data?.data?.unavailable ? data?.data?.unavailable : []
-  // const slectedSeatsByOthers = data?.data?.locked ? data?.data?.locked : []
+  // Remove expired seats and update active seats state safely after render
+  useEffect(() => {
+    const currentTime = new Date()
+    const activeSeats: string[] = []
 
-  const handleContinue = () => {
-    setStep(2)
+    seatsFromRedux?.seats?.forEach((seat: any) => {
+      const seatTime = new Date(seat.date)
+      const timeDifference = currentTime.getTime() - seatTime.getTime()
+
+      // Example: seats expire after 5 minutes (300000 ms) 1 minute = 60000 ms
+      if (timeDifference < 480000) {
+        activeSeats.push(seat.seat)
+      } else {
+        dispatch(removeSeats(seat))
+      }
+    })
+
+    setSelectedSeats(activeSeats)
+  }, [seatsFromRedux, dispatch])
+
+  // Setup socket connection
+  useEffect(() => {
+    const newSocket = io(`http://localhost:5000/booking`)
+    setSocket(newSocket)
+
+    newSocket.on('connect', () => {
+      newSocket.emit('joinBusRoom', JSON.stringify({ bus: "642c8f4a9b1e8b0012345678" }))
+    })
+
+    newSocket.on('busSeatsUpdated', (updatedSeats) => {
+      setUnavailableSeats(updatedSeats?.unavailable || [])
+      setSelectedSeatsByOthers(updatedSeats?.locked || [])
+      setSeats(updatedSeats)
+    })
+
+    return () => {
+      newSocket.disconnect()
+    }
+  }, [])
+
+  // Handle seat select/deselect toggle
+  const toggleSeatSelection = (seatId: string) => {
+    if (unavailableSeats.includes(seatId)) return
+    if (selectedSeatsByOthers.includes(seatId) && !selectedSeats.includes(seatId)) return
+
+    if (!socket) return
+
+    const bookingData = {
+      bus: "642c8f4a9b1e8b0012345678",
+      user: "642c8f4a9b1e8b0098765432",
+      seat: seatId,
+    }
+
+    socket.emit('createBooking', JSON.stringify(bookingData))
+    dispatch(selectedSeatsRedux(seatId))
   }
 
   const handleConfirmBooking = () => {
     alert("Booking confirmed! Thank you for your purchase.")
   }
 
-  // socket connection and event handling
-  useEffect(() => {
-    const newSocket = io(`http://localhost:5000/booking`);
-    setSocket(newSocket);
-    newSocket.on('connect', () => {
-      console.log('Connected with socket id:', newSocket.id);
-      newSocket.emit('joinBusRoom', JSON.stringify({ bus: "642c8f4a9b1e8b0012345678" }));
-    });
-
-    newSocket.on('busSeatsUpdated', (updatedSeats) => {
-      console.log('Received updated seats:', updatedSeats?.unavailable);
-      console.log('Received updated seatsssssssss locked:', updatedSeats?.locked);
-
-      setUnavailableSeats(updatedSeats?.unavailable || []);
-      setSelectedSeatsByOthers(updatedSeats?.locked || []);
-      setSeats(updatedSeats);
-    });
-
-    // Cleanup on unmount
-    return () => {
-      newSocket.disconnect();
-    };
-  }, []);
-
-
-
-  // const handleCreateBooking = () => {
-  //   if (!socket) return;
-  //   // Send booking data to server
-  //   socket.emit('createBooking', JSON.stringify(bookingData));
-  // };
-
-
-  const toggleSeatSelection = (seatId: string) => {
-    if (unavailableSeats.includes(seatId)) return
-    // if (slectedSeatsByOthers.includes(seatId)) return
-    const bookingData = {
-      bus: "642c8f4a9b1e8b0012345678",
-      user: "642c8f4a9b1e8b0098765432",
-      seat: seatId
-    }
-
-    if (!socket) return;
-    socket.emit('createBooking', JSON.stringify(bookingData));
-
-    setSelectedSeats((prev) => {
-      if (prev.includes(seatId)) {
-        return prev.filter((s) => s !== seatId)
-      } else {
-        return [...prev, seatId]
-      }
-    })
-  }
-
-
   return (
     <div className="grid gap-6 md:grid-cols-3">
       <div className="md:col-span-2">
-        {step === 1 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Select Your Seats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6 flex justify-between rounded bg-gray-100 p-3">
-                <div>
-                  <p className="font-semibold">{bus.company}</p>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <span>{bus.departure}</span>
-                    <ArrowRight className="mx-2 h-3 w-3" />
-                    <span>{bus.arrival}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">${bus.price} per seat</p>
-                  <p className="text-sm text-gray-600">{selectedSeats.length} seats selected</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Your Seats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6 flex justify-between rounded bg-gray-100 p-3">
+              <div>
+                <p className="font-semibold">{bus.company}</p>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span>{bus.departure}</span>
+                  <ArrowRight className="mx-2 h-3 w-3" />
+                  <span>{bus.arrival}</span>
                 </div>
               </div>
+              <div className="text-right">
+                <p className="font-semibold">${bus.price} per seat</p>
+                <p className="text-sm text-gray-600">{selectedSeats.length} seats selected</p>
+              </div>
+            </div>
 
-              <div className="mb-6">
-                <div className="mb-4 flex flex-col sm:flex-row items-center justify-center space-x-4">
-                  <div className=" flex space-x-4">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-white"></div>
-                      <span className="text-sm">Available</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-red-200"></div>
-                      <span className="text-sm">Locked Someone</span>
-                    </div>
+            <div className="mb-6">
+              <div className="mb-4 flex flex-col sm:flex-row items-center justify-center space-x-4">
+                <div className="flex space-x-4">
+                  <div className="flex items-center">
+                    <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-white"></div>
+                    <span className="text-sm">Available</span>
                   </div>
-
-                  <div className=" flex space-x-4">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-gray-300"></div>
-                      <span className="text-sm">Unavailable</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="mr-2 h-4 w-4 rounded border border-blue-500 bg-blue-500"></div>
-                      <span className="text-sm">Selected</span>
-                    </div>
+                  <div className="flex items-center">
+                    <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-red-200"></div>
+                    <span className="text-sm">Locked Someone</span>
                   </div>
                 </div>
 
-
-                <div className="flex justify-center">
-                  <div className="w-64 rounded-t-xl bg-gray-200 p-2 text-center font-semibold">Driver</div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-4 gap-2">
-                  {Array.from({ length: totalRows }).map((_, rowIndex) => (
-                    <div key={rowIndex} className="col-span-4 flex items-center justify-between">
-                      <div className="mr-2 w-6 text-center font-medium">{rowIndex + 1}</div>
-                      <div className="grid flex-1 grid-cols-4 gap-2">
-                        {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
-                          // Add aisle after the 2nd seat
-                          const hasAisleAfter = seatIndex === aisleAfter - 1 ? "mr-4" : ""
-                          const seatLetter = String.fromCharCode(65 + seatIndex) // A, B, C, D
-                          const seatId = `${rowIndex + 1}${seatLetter}`
-                          const isUnavailable = unavailableSeats.includes(seatId)
-                          const isSelectedByOthers = slectedSeatsByOthers.includes(seatId)
-                          const isSelected = selectedSeats.includes(seatId)
-
-                          return (
-                            <button
-                              key={seatIndex}
-                              className={cn(
-                                "flex h-10 items-center justify-center rounded border text-sm font-medium cursor-pointer",
-                                hasAisleAfter,
-                                isUnavailable
-                                  ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
-                                  : isSelected
-                                    ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
-                                    :
-                                    isSelectedByOthers ?
-                                      "border-red-200 bg-red-200 text-white hover:bg-red-200 cursor-not-allowed"
-                                      : "border-gray-300 bg-white hover:border-blue-500",
-                              )}
-                              onClick={() => toggleSeatSelection(seatId)}
-                              disabled={isUnavailable}
-                            >
-                              {seatId}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex space-x-4">
+                  <div className="flex items-center">
+                    <div className="mr-2 h-4 w-4 rounded border border-gray-300 bg-gray-300"></div>
+                    <span className="text-sm">Unavailable</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="mr-2 h-4 w-4 rounded border border-blue-500 bg-blue-500"></div>
+                    <span className="text-sm">Selected</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleContinue}
-                  disabled={selectedSeats.length === 0}
-                  className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                >
-                  Continue
-                </Button>
+              <div className="flex justify-center">
+                <div className="w-64 rounded-t-xl bg-gray-200 p-2 text-center font-semibold">Driver</div>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Passenger Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {selectedSeats.map((seat, index) => (
-                  <div key={seat} className="space-y-4">
-                    <h3 className="font-medium">
-                      Passenger {index + 1} - Seat {seat}
-                    </h3>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor={`firstName-${seat}`}>First Name</Label>
-                        <Input id={`firstName-${seat}`} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`lastName-${seat}`}>Last Name</Label>
-                        <Input id={`lastName-${seat}`} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`age-${seat}`}>Age</Label>
-                        <Input id={`age-${seat}`} type="number" min="0" max="120" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`gender-${seat}`}>Gender</Label>
-                        <Select>
-                          <SelectTrigger id={`gender-${seat}`}>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+
+              <div className="mt-6 grid grid-cols-4 gap-2">
+                {Array.from({ length: totalRows }).map((_, rowIndex) => (
+                  <div key={rowIndex} className="col-span-4 flex items-center justify-between">
+                    <div className="mr-2 w-6 text-center font-medium">{rowIndex + 1}</div>
+                    <div className="grid flex-1 grid-cols-4 gap-2">
+                      {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
+                        const hasAisleAfter = seatIndex === aisleAfter - 1 ? "mr-4" : ""
+                        const seatLetter = String.fromCharCode(65 + seatIndex)
+                        const seatId = `${rowIndex + 1}${seatLetter}`
+                        const isUnavailable = unavailableSeats.includes(seatId)
+                        const isSelectedByOthers = selectedSeatsByOthers.includes(seatId)
+                        const isSelected = selectedSeats.includes(seatId)
+
+                        return (
+                          <button
+                            key={seatIndex}
+                            className={cn(
+                              "flex h-10 items-center justify-center rounded border text-sm font-medium cursor-pointer",
+                              hasAisleAfter,
+                              isUnavailable
+                                ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+                                : isSelected
+                                ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
+                                : isSelectedByOthers
+                                ? "border-red-200 bg-red-200 text-white cursor-not-allowed"
+                                : "border-gray-300 bg-white hover:border-blue-500",
+                            )}
+                            onClick={() => toggleSeatSelection(seatId)}
+                            disabled={isUnavailable}
+                          >
+                            {seatId}
+                          </button>
+                        )
+                      })}
                     </div>
-                    {index < selectedSeats.length - 1 && <Separator className="my-4" />}
                   </div>
                 ))}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email (for e-ticket)</Label>
-                  <Input id="email" type="email" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" />
-                </div>
-
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(1)}
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
-                  >
-                    Back
-                  </Button>
-                  <Button onClick={handleConfirmBooking} className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
-                    Confirm Booking
-                  </Button>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                disabled={selectedSeats.length === 0}
+                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                onClick={handleConfirmBooking}
+              >
+                Continue
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div>
@@ -339,7 +257,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                 <h3 className="font-medium">Selected Seats</h3>
                 {selectedSeats.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
-                    {selectedSeats.map((seat) => (
+                    {selectedSeats.map((seat: string) => (
                       <span
                         key={seat}
                         className="inline-flex items-center rounded bg-blue-100 px-2 py-1 text-xs text-blue-800"
@@ -373,10 +291,10 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                 </div>
               </div>
 
-              <div className="rounded-md bg-gray-50 p-3 text-sm">
+              <div className="rounded-md bg-gray-50 py-2 text-sm">
                 <p className="flex items-start">
                   <Check className="mr-2 h-4 w-4 text-green-500" />
-                  Free cancellation up to 24 hours before departure
+                  Remember your selected seats will be locked for 7 minutes. If you do not complete the payment, they will be released for others.
                 </p>
               </div>
             </div>
