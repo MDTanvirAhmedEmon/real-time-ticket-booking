@@ -13,6 +13,8 @@ import { useGetAllUnavailableSeatsQuery } from "@/redux/baseApi"
 import { useDispatch, useSelector } from "react-redux"
 import { removeSeats, selectedSeatsRedux } from "@/redux/selectedSeats/selectedSeatsSlice"
 import CheckOut from "./CheckOut"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 
 interface SeatSelectionProps {
   busId: number
@@ -111,6 +113,11 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
     if (unavailableSeats.includes(seatId)) return
     if (selectedSeatsByOthers.includes(seatId) && !selectedSeats.includes(seatId)) return
 
+    // Prevent selecting more than 5 seats
+    if (!selectedSeats.includes(seatId) && selectedSeats.length >= 5) {
+      toast("You can select a maximum of 5 seats.")
+      return;
+    }
     if (!socket) return
 
     const bookingData = {
@@ -136,6 +143,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Select Your Seats</CardTitle>
+                <Toaster />
               </CardHeader>
               <CardContent>
                 <div className="mb-6 flex justify-between rounded bg-gray-100 p-3">
