@@ -90,7 +90,8 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
 
   // Setup socket connection
   useEffect(() => {
-    const newSocket = io(`http://localhost:5000/booking`)
+    // const newSocket = io(`http://localhost:5000/booking`)
+    const newSocket = io(`https://real-time-ticket-booking-server.onrender.com/booking`)
     setSocket(newSocket)
 
     newSocket.on('connect', () => {
