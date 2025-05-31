@@ -15,6 +15,7 @@ import { removeSeats, selectedSeatsRedux } from "@/redux/selectedSeats/selectedS
 import CheckOut from "./CheckOut"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { LoadingSpinner } from "../Utils/LoadingSpinner"
 
 interface SeatSelectionProps {
   busId: number
@@ -38,7 +39,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const [unavailableSeats, setUnavailableSeats] = useState<string[]>([])
   const [selectedSeatsByOthers, setSelectedSeatsByOthers] = useState<string[]>([])
 
-  const { data } = useGetAllUnavailableSeatsQuery("642c8f4a9b1e8b0012345678", {
+  const { data, isLoading } = useGetAllUnavailableSeatsQuery("642c8f4a9b1e8b0012345678", {
     refetchOnMountOrArgChange: true,
   })
 
@@ -190,45 +191,52 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                   <div className="flex justify-center">
                     <div className="w-64 rounded-t-xl bg-gray-200 p-2 text-center font-semibold">Driver</div>
                   </div>
+                  {
+                    isLoading ? 
+                    <div>
+                      <LoadingSpinner></LoadingSpinner>
+                    </div>
+                    :
+                      <div className="mt-6 grid grid-cols-4 gap-2">
+                        {Array.from({ length: totalRows }).map((_, rowIndex) => (
+                          <div key={rowIndex} className="col-span-4 flex items-center justify-between">
+                            <div className="mr-2 w-6 text-center font-medium">{rowIndex + 1}</div>
+                            <div className="grid flex-1 grid-cols-4 gap-2">
+                              {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
+                                const hasAisleAfter = seatIndex === aisleAfter - 1 ? "mr-4" : ""
+                                const seatLetter = String.fromCharCode(65 + seatIndex)
+                                const seatId = `${rowIndex + 1}${seatLetter}`
+                                const isUnavailable = unavailableSeats.includes(seatId)
+                                const isSelectedByOthers = selectedSeatsByOthers.includes(seatId)
+                                const isSelected = selectedSeats.includes(seatId)
 
-                  <div className="mt-6 grid grid-cols-4 gap-2">
-                    {Array.from({ length: totalRows }).map((_, rowIndex) => (
-                      <div key={rowIndex} className="col-span-4 flex items-center justify-between">
-                        <div className="mr-2 w-6 text-center font-medium">{rowIndex + 1}</div>
-                        <div className="grid flex-1 grid-cols-4 gap-2">
-                          {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
-                            const hasAisleAfter = seatIndex === aisleAfter - 1 ? "mr-4" : ""
-                            const seatLetter = String.fromCharCode(65 + seatIndex)
-                            const seatId = `${rowIndex + 1}${seatLetter}`
-                            const isUnavailable = unavailableSeats.includes(seatId)
-                            const isSelectedByOthers = selectedSeatsByOthers.includes(seatId)
-                            const isSelected = selectedSeats.includes(seatId)
-
-                            return (
-                              <button
-                                key={seatIndex}
-                                className={cn(
-                                  "flex h-10 items-center justify-center rounded border text-sm font-medium cursor-pointer",
-                                  hasAisleAfter,
-                                  isUnavailable
-                                    ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
-                                    : isSelected
-                                      ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
-                                      : isSelectedByOthers
-                                        ? "border-red-200 bg-red-200 text-white cursor-not-allowed"
-                                        : "border-gray-300 bg-white hover:border-blue-500",
-                                )}
-                                onClick={() => toggleSeatSelection(seatId)}
-                                disabled={isUnavailable}
-                              >
-                                {seatId}
-                              </button>
-                            )
-                          })}
-                        </div>
+                                return (
+                                  <button
+                                    key={seatIndex}
+                                    className={cn(
+                                      "flex h-10 items-center justify-center rounded border text-sm font-medium cursor-pointer",
+                                      hasAisleAfter,
+                                      isUnavailable
+                                        ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+                                        : isSelected
+                                          ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
+                                          : isSelectedByOthers
+                                            ? "border-red-200 bg-red-200 text-white cursor-not-allowed"
+                                            : "border-gray-300 bg-white hover:border-blue-500",
+                                    )}
+                                    onClick={() => toggleSeatSelection(seatId)}
+                                    disabled={isUnavailable}
+                                  >
+                                    {seatId}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                  }
+
                 </div>
 
                 <div className="flex justify-end">
