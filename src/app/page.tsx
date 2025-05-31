@@ -2,18 +2,18 @@
 import { Clock, MapPin, Search } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import BusResults from "../components/Home/BusResults"
-import { CalendarIcon } from "lucide-react"
+// import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { useState } from "react"
+// import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+// import { Calendar } from "@/components/ui/calendar"
+// import { cn } from "@/lib/utils"
+// import { format } from "date-fns"
+// import { useState } from "react"
 
 export default function Home() {
-  const [date, setDate] = useState<Date>()
+  // const [date, setDate] = useState<Date>()
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -37,7 +37,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
+                  {/* <Label htmlFor="date">Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -51,7 +51,7 @@ export default function Home() {
                     <PopoverContent className="w-auto p-0">
                       <Calendar className=" bg-white" mode="single" selected={date} onSelect={setDate} initialFocus />
                     </PopoverContent>
-                  </Popover>
+                  </Popover> */}
                 </div>
                 <div className="flex items-end">
                   <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Search Buses</Button>

@@ -1,11 +1,12 @@
-"use client"
-import SeatSelection from "@/components/Home/SeatSelection"
-import { useSearchParams } from "next/navigation"
+"use client";
 
-const Booking = () => {
+import SeatSelection from "@/components/Home/SeatSelection";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-    const searchParams = useSearchParams()
-    const selectedBus = searchParams.get('selectedBus')
+const BusSelector = () => {
+    const searchParams = useSearchParams();
+    const selectedBus = searchParams.get("selectedBus");
 
     const busData = [
         {
@@ -45,7 +46,13 @@ const Booking = () => {
             available: 30,
         },
     ]
+    const busId = selectedBus ? Number(selectedBus) : 1;
+    const bus = busData.find((b) => b.id === busId) || busData[0];
 
+    return <SeatSelection busId={busId} bus={bus} />;
+};
+
+export default function Booking() {
     return (
         <section className="mb-12 py-8 px-4 md:px-0">
             <div className="mx-auto max-w-4xl">
@@ -56,14 +63,10 @@ const Booking = () => {
                     Search, compare, and book bus tickets for your next journey
                 </p>
 
-                <SeatSelection
-                    busId={selectedBus ? Number(selectedBus) : 1}
-                    bus={busData.find((b) => b.id === (selectedBus ? Number(selectedBus) : 1)) || busData[0]}
-                />
+                <Suspense fallback={<div>Loading...</div>}>
+                    <BusSelector />
+                </Suspense>
             </div>
-
         </section>
     );
-};
-
-export default Booking;
+}
