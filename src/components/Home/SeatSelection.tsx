@@ -34,7 +34,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
   const userInfoString = localStorage.getItem('loginUser')
   const userInfo = userInfoString ? JSON.parse(userInfoString) : null
   const userId = userInfo?.id
-  if(!userId){
+  if (!userId) {
     router.push('/auth/login')
   }
   const seatsFromRedux = useSelector((state: any) => state.selectedSeats)
@@ -108,7 +108,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
     })
 
     newSocket.on('busSeatsUpdated', (updatedSeats) => {
-      console.log([updatedSeats?.lockedBeforeYou]);
+      console.log(updatedSeats);
       setUnavailableSeats(updatedSeats?.unavailable || [])
       setSelectedSeatsByOthers(updatedSeats?.locked || [])
       setSeats(updatedSeats)
