@@ -16,6 +16,7 @@ import CheckOut from "./CheckOut"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { LoadingSpinner } from "../Utils/LoadingSpinner"
+import { useRouter } from "next/navigation"
 
 interface SeatSelectionProps {
   busId: number
@@ -29,9 +30,13 @@ interface SeatSelectionProps {
 }
 
 export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
-  // const randomInt = Math.floor(Math.random() * 100); // 0 to 99
-  const userId = `642c8f4a9b1e8b00987524359`
-  console.log('generated Id', userId);
+  const router = useRouter();
+  const userInfoString = localStorage.getItem('loginUser')
+  const userInfo = userInfoString ? JSON.parse(userInfoString) : null
+  const userId = userInfo?.id
+  if(!userId){
+    router.push('/auth/login')
+  }
   const seatsFromRedux = useSelector((state: any) => state.selectedSeats)
   const dispatch = useDispatch()
 
