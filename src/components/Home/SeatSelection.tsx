@@ -29,6 +29,9 @@ interface SeatSelectionProps {
 }
 
 export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
+  // const randomInt = Math.floor(Math.random() * 100); // 0 to 99
+  const userId = `642c8f4a9b1e8b00987524359`
+  console.log('generated Id', userId);
   const seatsFromRedux = useSelector((state: any) => state.selectedSeats)
   const dispatch = useDispatch()
 
@@ -100,13 +103,17 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
     })
 
     newSocket.on('busSeatsUpdated', (updatedSeats) => {
-      console.log([updatedSeats?.lockedBeforeYou?.seat]);
+      console.log([updatedSeats?.lockedBeforeYou]);
       setUnavailableSeats(updatedSeats?.unavailable || [])
       setSelectedSeatsByOthers(updatedSeats?.locked || [])
       setSeats(updatedSeats)
       const lockedSomeOneBefore: any = updatedSeats?.lockedBeforeYou?.seat
-      dispatch(removeSeatById(lockedSomeOneBefore))
-      if (updatedSeats?.message) {
+
+      if (userId !== updatedSeats?.lockedBeforeYou?.user) {
+        dispatch(removeSeatById(lockedSomeOneBefore))
+      }
+
+      if (updatedSeats?.message && userId !== updatedSeats?.lockedBeforeYou?.user) {
         toast(updatedSeats?.message)
       }
     })
@@ -130,9 +137,9 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
 
     const bookingData = {
       bus: "642c8f4a9b1e8b0012345678",
-      user: "642c8f4a9b1e8b0098765431",
+      user: userId,
       seat: seatId,
-    }
+    };
 
     socket.emit('createBooking', JSON.stringify(bookingData))
     dispatch(selectedSeatsRedux(seatId))
