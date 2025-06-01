@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { io, Socket } from 'socket.io-client';
 import { useGetAllUnavailableSeatsQuery } from "@/redux/baseApi"
 import { useDispatch, useSelector } from "react-redux"
-import { removeSeats, selectedSeatsRedux } from "@/redux/selectedSeats/selectedSeatsSlice"
+import { removeSeatById, removeSeats, selectedSeatsRedux } from "@/redux/selectedSeats/selectedSeatsSlice"
 import CheckOut from "./CheckOut"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
@@ -100,9 +100,15 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
     })
 
     newSocket.on('busSeatsUpdated', (updatedSeats) => {
+      console.log([updatedSeats?.lockedBeforeYou?.seat]);
       setUnavailableSeats(updatedSeats?.unavailable || [])
       setSelectedSeatsByOthers(updatedSeats?.locked || [])
       setSeats(updatedSeats)
+      const lockedSomeOneBefore: any = updatedSeats?.lockedBeforeYou?.seat
+      dispatch(removeSeatById(lockedSomeOneBefore))
+      if (updatedSeats?.message) {
+        toast(updatedSeats?.message)
+      }
     })
 
     return () => {
@@ -124,7 +130,7 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
 
     const bookingData = {
       bus: "642c8f4a9b1e8b0012345678",
-      user: "642c8f4a9b1e8b0098765432",
+      user: "642c8f4a9b1e8b0098765431",
       seat: seatId,
     }
 
@@ -192,11 +198,11 @@ export default function SeatSelection({ busId, bus }: SeatSelectionProps) {
                     <div className="w-64 rounded-t-xl bg-gray-200 p-2 text-center font-semibold">Driver</div>
                   </div>
                   {
-                    isLoading ? 
-                    <div>
-                      <LoadingSpinner></LoadingSpinner>
-                    </div>
-                    :
+                    isLoading ?
+                      <div>
+                        <LoadingSpinner></LoadingSpinner>
+                      </div>
+                      :
                       <div className="mt-6 grid grid-cols-4 gap-2">
                         {Array.from({ length: totalRows }).map((_, rowIndex) => (
                           <div key={rowIndex} className="col-span-4 flex items-center justify-between">

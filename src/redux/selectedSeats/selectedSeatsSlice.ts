@@ -35,11 +35,14 @@ export const selectedSeatsSlice = createSlice({
         removeSeats: (state, action: PayloadAction<Seat>) => {
             // Remove the seat based on the seat id passed in the payload
             state.seats = state.seats.filter((s) => s.seat !== action.payload.seat);
+        },
+        removeSeatById: (state, action: PayloadAction<string>) => {
+            state.seats = state.seats.filter((s) => s.seat !== action.payload);
         }
 
     },
 });
 
-export const { selectedSeatsRedux, removeSeats } = selectedSeatsSlice.actions;
+export const { selectedSeatsRedux, removeSeats, removeSeatById } = selectedSeatsSlice.actions;
 
 export default selectedSeatsSlice.reducer;
