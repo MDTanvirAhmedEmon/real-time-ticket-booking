@@ -1,7 +1,4 @@
 "use client"
-
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,8 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
+import { useRegisterUserMutation } from "@/redux/baseApi"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         userInfo: {
             email: "",
@@ -36,14 +38,24 @@ export default function RegisterPage() {
         }))
     }
 
+    const [registerUser, { isLoading }] = useRegisterUserMutation();
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         console.log("Registration data:", formData)
-        // Handle form submission here
+        registerUser(formData).unwrap()
+            .then(() => {
+                toast('Register Successfull')
+                router.push('/auth/login')
+            })
+            .catch((error) => {
+                toast(error?.data?.message)
+            })
     }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+            <Toaster></Toaster>
             <Card className="w-full max-w-md border-2 border-gray-300 bg-white shadow-lg">
                 <CardHeader className="space-y-1 pb-6">
                     <CardTitle className="text-2xl font-bold text-center text-gray-900">Create an account</CardTitle>
@@ -175,15 +187,15 @@ export default function RegisterPage() {
                         </div>
 
                         {/* Submit Button */}
-                        <Button type="submit" className="w-full bg-gray-900 hover:bg-gray-800 text-white py-2.5">
-                            Create Account
+                        <Button disabled={isLoading} type="submit" className="w-full bg-blue-600 text-white py-2.5 cursor-pointer">
+                            Create Account {isLoading && 'Loading...'}
                         </Button>
 
                         {/* Sign In Link */}
                         <div className="text-center text-sm pt-2">
                             <span className="text-gray-600">Already have an account? </span>
-                            <Link href="/login" className="text-gray-900 hover:underline font-medium">
-                                Sign in
+                            <Link href="/auth/login" className="text-gray-900 hover:underline font-medium">
+                                Log In
                             </Link>
                         </div>
                     </form>
